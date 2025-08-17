@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>معلومات عامة</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+    }
+    header {
+      background: #2a5298;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    main {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0002;
+    }
+    h1 {margin-top: 0;}
+
+    /* زر مخفي */
+    #secretBtn {
+      position: fixed;
+      bottom: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      opacity: 0; /* غير مرئي */
+      cursor: pointer;
+    }
+
+    /* واجهة تسجيل الدخول المنسدلة */
+    #login {
+      display: none;
+      margin-top: 20px;
+      background: #eee;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    #login input, #login button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+    }
+    #login button {background:#2a5298; color:white; cursor:pointer;}
+    #login button:hover {background:#1e3c72;}
+
+    /* واجهة الشات */
+    #chat {display:none; margin-top:20px;}
+    #messages {background:#f9f9f9; height:300px; overflow-y:auto; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px;}
+    .msg {background:#e0e0e0; padding:8px; margin:5px 0; border-radius:6px;}
+    .me {background:#c8e6c9;}
+    img.chat-img {max-width:180px; border-radius:6px; margin-top:5px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>حكمه اليوم المجانيه</h1>
+</header>
+
+<main>
+  <h2>حكمه اليوم المجانيه</h2>
+  <p>
+    "قد تظن أنّ البداية وُجدت قبل النهاية، لكن إن أمعنت النظر وجدت أنّ النهاية هي التي تُنادي البداية منذ الأزل، وكأنّ الزمان دائرة لا أول لها ولا آخر، فإذا حاولت أن تُمسك باللحظة ضاعت منك، وإذا تركتها أمكنك أن تظفر بها، فتبقى عالقًا بين يقين أنّك فهمت، وشكّ أنك لم تفهم شيئًا على الإطلاق."
+  </p>
+  <p>"كلّما ظننت أنّك وصلت إلى المعنى، وجدت أنّ المعنى هو الذي وصل إليك، فاختلط الطريق بالغاية، والغاية بالطريق."
+  </p>
+
+  <!-- منطقة تسجيل الدخول (تظهر بعد الضغط على الزر السري) -->
+  <div id="login">
+    <h3>تسجيل الدخول</h3>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="login()">دخول</button>
+  </div>
+
+  <!-- واجهة الشات -->
+  <div id="chat">
+    <h3>مرحبا <span id="userLabel"></span></h3>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="sendMessage()">إرسال</button>
+    <button onclick="logout()">تسجيل خروج</button>
+  </div>
+</main>
+
+<!-- زر سري (شفاف) -->
+<div id="secretBtn" onclick="toggleLogin()"></div>
+
+<script>
+  // إعداد Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9GYc_t1R3aNArA2dW_nPYSJiNainYRZE",
+    authDomain: "super-a942b.firebaseapp.com",
+    projectId: "super-a942b",
+    storageBucket: "super-a942b.firebasestorage.app",
+    messagingSenderId: "97153507605",
+    appId: "1:97153507605:web:6e230555d311f0bb1fc91c",
+    measurementId: "G-WZZQ041C1F",
+    databaseURL: "https://super-a942b-default-rtdb.firebaseio.com/"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let currentUser = null;
+  let userRef = null;
+
+  // إظهار / إخفاء تسجيل الدخول
+  function toggleLogin() {
+    const loginDiv = document.getElementById("login");
+    loginDiv.style.display = (loginDiv.style.display==="none" || loginDiv.style.display==="") ? "block":"none";
+  }
+
+  function login() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+
+    if ((u==="blobif1" && p==="icq2") || (u==="blobif-1" && p==="icq1")) {
+      db.ref("activeUsers").once("value").then(snapshot=>{
+        const users = snapshot.val() || {};
+        const userCount = Object.keys(users).length;
+
+        if (users[u]) {
+          alert("هذا المستخدم متصل بالفعل!");
+          return;
+        }
+
+        if (userCount >= 2) {
+          alert("الغرفة ممتلئة!");
+          return;
+        }
+
+        currentUser = u;
+        userRef = db.ref("activeUsers/"+currentUser);
+        userRef.set(true);
+        userRef.onDisconnect().remove();
+
+        if (userCount === 0) {
+          db.ref("chat").remove();
+        }
+
+        document.getElementById("login").style.display = "none";
+        document.getElementById("chat").style.display = "block";
+        document.getElementById("userLabel").innerText = u;
+        loadMessages();
+      });
+    } else {
+      alert("بيانات الدخول غير صحيحة");
+    }
+  }
+
+  function logout() {
+    if (userRef) userRef.remove();
+    location.reload();
+  }
+
+  function sendMessage() {
+    const text = document.getElementById("messageInput").value.trim();
+    const fileInput = document.getElementById("imageInput");
+    const file = fileInput.files[0];
+
+    if (!text && !file) return;
+
+    const msgRef = db.ref("chat").push();
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        msgRef.set({
+          user: currentUser,
+          image: e.target.result,
+          timestamp: Date.now()
+        });
+        setTimeout(()=>{ msgRef.remove(); },10000);
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = "";
+    } else {
+      msgRef.set({
+        user: currentUser,
+        text: text,
+        timestamp: Date.now()
+      });
+      setTimeout(()=>{ msgRef.remove(); },10000);
+    }
+    document.getElementById("messageInput").value = "";
+  }
+
+  function loadMessages() {
+    const messagesDiv = document.getElementById("messages");
+
+    db.ref("chat").on("child_added", snapshot=>{
+      const data = snapshot.val();
+      if (!data) return;
+
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "msg" + (data.user===currentUser ? " me":"");
+      msgDiv.setAttribute("id", snapshot.key);
+
+      let content = `<b>${data.user}:</b> `;
+      if (data.text) content += data.text;
+      if (data.image) content += `<br><img src="${data.image}" class="chat-img">`;
+
+      msgDiv.innerHTML = content;
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    db.ref("chat").on("child_removed", snapshot=>{
+      const el = document.getElementById(snapshot.key);
+      if (el) el.remove();
+    });
+  }
+</script>
+
+</body>
+</html>
