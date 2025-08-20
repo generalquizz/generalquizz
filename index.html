@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>معلومات عامة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- عشان الموبايل -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <style>
@@ -20,50 +21,109 @@
       text-align: center;
     }
     main {
-      max-width: 800px;
-      margin: 20px auto;
+      max-width: 600px;
+      margin: 10px auto;
       background: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 10px;
-      box-shadow: 0 0 10px #0002;
+      box-shadow: 0 0 8px #0002;
     }
-    h1 {margin-top: 0;}
+    h1,h2 {margin: 0 0 10px;}
 
     /* زر مخفي */
     #secretBtn {
       position: fixed;
       bottom: 5px;
       right: 5px;
-      width: 20px;
-      height: 20px;
-      opacity: 0; /* غير مرئي */
+      width: 25px;
+      height: 25px;
+      opacity: 0;
       cursor: pointer;
     }
 
-    /* واجهة تسجيل الدخول المنسدلة */
+    /* واجهة تسجيل الدخول */
     #login {
       display: none;
-      margin-top: 20px;
-      background: #eee;
+      margin-top: 15px;
+      background: #f0f0f0;
       padding: 15px;
       border-radius: 8px;
     }
     #login input, #login button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 8px 0;
+      font-size: 16px;
       border: 1px solid #aaa;
       border-radius: 6px;
+      box-sizing: border-box;
     }
-    #login button {background:#2a5298; color:white; cursor:pointer;}
+    #login button {
+      background:#2a5298;
+      color:white;
+      cursor:pointer;
+    }
     #login button:hover {background:#1e3c72;}
 
     /* واجهة الشات */
-    #chat {display:none; margin-top:20px;}
-    #messages {background:#f9f9f9; height:300px; overflow-y:auto; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px;}
-    .msg {background:#e0e0e0; padding:8px; margin:5px 0; border-radius:6px;}
+    #chat {
+      display:none;
+      margin-top:15px;
+    }
+    #messages {
+      background:#fafafa;
+      height: 55vh; /* ياخد معظم الشاشة */
+      overflow-y:auto;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      margin-bottom:10px;
+      font-size: 15px;
+    }
+    .msg {
+      background:#e0e0e0;
+      padding:8px;
+      margin:5px 0;
+      border-radius:6px;
+      word-wrap: break-word;
+    }
     .me {background:#c8e6c9;}
-    img.chat-img {max-width:180px; border-radius:6px; margin-top:5px;}
+    img.chat-img {
+      max-width:100%;
+      border-radius:6px;
+      margin-top:5px;
+    }
+
+    /* مدخلات الشات */
+    #chat-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #chat-controls input[type="text"],
+    #chat-controls input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    #chat-controls button {
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #chat-controls button:first-of-type {
+      background: #2a5298;
+      color: white;
+    }
+    #chat-controls button:last-of-type {
+      background: #e53935;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -75,31 +135,31 @@
 <main>
   <h2>حكمه اليوم المجانيه</h2>
   <p>
-    "قد تظن أنّ البداية وُجدت قبل النهاية، لكن إن أمعنت النظر وجدت أنّ النهاية هي التي تُنادي البداية منذ الأزل، وكأنّ الزمان دائرة لا أول لها ولا آخر، فإذا حاولت أن تُمسك باللحظة ضاعت منك، وإذا تركتها أمكنك أن تظفر بها، فتبقى عالقًا بين يقين أنّك فهمت، وشكّ أنك لم تفهم شيئًا على الإطلاق."
-  </p>
-  <p>"كلّما ظننت أنّك وصلت إلى المعنى، وجدت أنّ المعنى هو الذي وصل إليك، فاختلط الطريق بالغاية، والغاية بالطريق."
+    "قد تظن أنّ البداية وُجدت قبل النهاية، لكن إن أمعنت النظر وجدت أنّ النهاية هي التي تُنادي البداية منذ الأزل..."
   </p>
 
-  <!-- منطقة تسجيل الدخول (تظهر بعد الضغط على الزر السري) -->
+  <!-- منطقة تسجيل الدخول -->
   <div id="login">
     <h3>تسجيل الدخول</h3>
     <input type="text" id="username" placeholder="اسم المستخدم">
     <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
+    <button id="loginBtn">دخول</button>
   </div>
 
   <!-- واجهة الشات -->
   <div id="chat">
     <h3>مرحبا <span id="userLabel"></span></h3>
     <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
-    <input type="file" id="imageInput" accept="image/*">
-    <button onclick="sendMessage()">إرسال</button>
-    <button onclick="logout()">تسجيل خروج</button>
+    <div id="chat-controls">
+      <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+      <input type="file" id="imageInput" accept="image/*">
+      <button onclick="sendMessage()">إرسال</button>
+      <button onclick="logout()">تسجيل خروج</button>
+    </div>
   </div>
 </main>
 
-<!-- زر سري (شفاف) -->
+<!-- زر سري -->
 <div id="secretBtn" onclick="toggleLogin()"></div>
 
 <script>
@@ -139,7 +199,6 @@
           alert("هذا المستخدم متصل بالفعل!");
           return;
         }
-
         if (userCount >= 2) {
           alert("الغرفة ممتلئة!");
           return;
@@ -226,6 +285,12 @@
       if (el) el.remove();
     });
   }
+
+  // زر الدخول
+  document.getElementById("loginBtn").addEventListener("click", function(e){
+    e.preventDefault();
+    login();
+  });
 </script>
 
 </body>
